@@ -1,0 +1,7 @@
+name: 'Upload configurations'
+description: 'Upload configuration files to multiple Azure storage accounts'
+author: 'Raa Labs AS'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  
