@@ -1,4 +1,5 @@
 # upload-configurations
+[![Build](https://github.com/RaaLabs/upload-configurations/actions/workflows/build.yml/badge.svg)](https://github.com/RaaLabs/upload-configurations/actions/workflows/build.yml)
 
 GitHub action to upload configuration files to multiple Azure storage accounts.
 ## Workflow explanation
@@ -44,7 +45,7 @@ The action does not need any inputs to the GitHub action, but the following envi
 | BEFORE_COMMIT_SHA                         | Before commit for assessing change, should be taken from the GitHub action events payload   |
 
 ## Usage
-Sample workflow given is based on the sample folder structure given above (2 tenants -> 2 environment variables for Azure storage accounts). Also note the values that are set for `REPO_NAME`, `BRANCH_REF`, `AFTER_COMMIT_SHA`, and `BEFORE_COMMIT_SHA`, these should be set exactly like below.
+The sample workflow is based on the sample folder structure given above (2 tenants -> 2 environment variables for Azure storage accounts). Also note the values that are set for `REPO_NAME`, `BRANCH_REF`, `AFTER_COMMIT_SHA`, and `BEFORE_COMMIT_SHA`, these should be set exactly like below.
 
 ```yaml
 name: Upload configurations
