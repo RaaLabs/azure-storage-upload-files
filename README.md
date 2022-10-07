@@ -1,5 +1,5 @@
-# upload-files
-[![Build](https://github.com/RaaLabs/upload-files/actions/workflows/build.yml/badge.svg)](https://github.com/RaaLabs/upload-files/actions/workflows/build.yml)
+# azure-storage-upload-files
+[![Build](https://github.com/RaaLabs/azure-storage-upload-files/actions/workflows/build.yml/badge.svg)](https://github.com/RaaLabs/azure-storage-upload-files/actions/workflows/build.yml)
 
 GitHub action to upload files to multiple Azure storage accounts.
 ## Workflow explanation
@@ -76,5 +76,5 @@ jobs:
         fetch-depth: 2
 
     - name: Upload files
-      uses: RaaLabs/upload-files@v0.0.1
+      uses: RaaLabs/azure-storage-upload-files@v0.0.1
 ```
