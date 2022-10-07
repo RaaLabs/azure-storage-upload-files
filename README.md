@@ -76,5 +76,5 @@ jobs:
         fetch-depth: 2
 
     - name: Upload files
-      uses: RaaLabs/azure-storage-upload-files@v0.0.1
+      uses: RaaLabs/azure-storage-upload-files@v0.0.3
 ```
