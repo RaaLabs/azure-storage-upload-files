@@ -1,6 +1,6 @@
-name: 'Upload files'
+name: 'Azure storage upload files'
 description: 'Upload files to multiple Azure storage accounts'
 author: 'Raa Labs AS'
 runs:
   using: 'docker'
-  image: 'docker://raalabs/upload-files:0.0.1'
+  image: 'docker://raalabs/azure-storage-upload-files:0.0.1'
