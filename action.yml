@@ -3,4 +3,4 @@ description: 'Upload files to multiple Azure storage accounts'
 author: 'Raa Labs AS'
 runs:
   using: 'docker'
-  image: 'docker://raalabs/azure-storage-upload-files:0.0.2'
+  image: 'docker://raalabs/azure-storage-upload-files:0.0.3'
