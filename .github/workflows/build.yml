@@ -63,7 +63,7 @@ jobs:
       if: ${{ steps.context.outputs.should-publish == 'true' }}
       shell: bash
       run: |
-        docker build -f Dockerfile -t raalabs/upload-files:${{ steps.increment-version.outputs.next-version }}
+        docker build -f Dockerfile -t raalabs/upload-files:${{ steps.increment-version.outputs.next-version }} .
         docker push raalabs/upload-files:${{ steps.increment-version.outputs.next-version }}
         docker logout
 
