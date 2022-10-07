@@ -26,7 +26,7 @@ def main():
     logging.info(f"Fetching repo {repo_name}...")
     repo = g.get_repo(repo_name)
 
-    process_configuration_changed(
+    process_files_changed(
         repo=repo,
         branch_ref=branch_ref,
         previous_commit=before_commit_sha,
@@ -34,7 +34,7 @@ def main():
     )
 
 
-def process_configuration_changed(repo, branch_ref, previous_commit, this_commit):
+def process_files_changed(repo, branch_ref, previous_commit, this_commit):
     logging.info(f"Repo fetched. Comparing commits...")
     compared = repo.compare(previous_commit, this_commit)
     logging.info(f"Commits compared.")
@@ -44,7 +44,7 @@ def process_configuration_changed(repo, branch_ref, previous_commit, this_commit
             and not f.filename.startswith(".github"),
             compared.files,
         )
-    )  # Only consider files belonging to a tenant and device
+    )
 
     added_or_modified_files = list(
         filter(lambda f: f.status in {"added", "modified", "renamed"}, compared_files)
@@ -54,7 +54,7 @@ def process_configuration_changed(repo, branch_ref, previous_commit, this_commit
     )
 
     if len(filenames_for_changed_files) == 0:
-        logging.info("No changed files, no configurations updated.")
+        logging.info("No changed files, no files updated.")
         return
 
     logging.info(f"Changed files: {filenames_for_changed_files}")
@@ -71,70 +71,70 @@ def process_configuration_changed(repo, branch_ref, previous_commit, this_commit
 
     allowed_branches = ["refs/heads/master", "refs/heads/main"]
     if branch_ref not in allowed_branches:
-        logging.info(f"Change not on main branch, no configs updated.")
+        logging.info(f"Change not on main branch, no files updated.")
         return
 
-    logging.info(f"Change on branch: {branch_ref}, updating configs")
+    logging.info(f"Change on branch: {branch_ref}, updating files")
 
     (
-        files_for_tenants,
-        changed_file_contents_for_tenant,
+        files_for_storage_accounts,
+        changed_file_contents_for_storage_accounts,
     ) = group_compared_files_and_changed_file_contents(
         compared_files, changed_file_contents
     )
 
-    tenants = list(files_for_tenants.keys())
+    storage_accounts = list(files_for_storage_accounts.keys())
 
-    for tenant in tenants:
-        tenant_connection_string_env_variable = (
-            f"{tenant.upper()}_STORAGE_ACCOUNT_CONNECTION_STRING"
+    for storage_account in storage_accounts:
+        storage_account_connection_string_env_variable = (
+            f"{storage_account.upper()}_STORAGE_ACCOUNT_CONNECTION_STRING"
         )
-        tenant_storage_connection_string = os.environ.get(
-            tenant_connection_string_env_variable
+        storage_account_connection_string = os.environ.get(
+            storage_account_connection_string_env_variable
         )
 
-        if tenant_storage_connection_string is not None:
-            logging.info(f"Updating configs for tenant: {tenant}")
+        if storage_account_connection_string is not None:
+            logging.info(f"Updating files for storage account: {storage_account}")
             update_blobs(
-                compared_files=files_for_tenants[tenant],
-                changed_file_contents=changed_file_contents_for_tenant[tenant],
-                storage_connection_string=tenant_storage_connection_string,
+                compared_files=files_for_storage_accounts[storage_account],
+                changed_file_contents=changed_file_contents_for_storage_accounts[storage_account],
+                storage_connection_string=storage_account_connection_string,
             )
-            logging.info(f"Finished updating configs for tenant: {tenant}")
+            logging.info(f"Finished updating files for storage account: {storage_account}")
         else:
             logging.info(
-                f"Tenant: {tenant} does not have the connection string of the storage account set properly. Set the environment variable: {tenant.upper()}_STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
+                f"Storage account: {storage_account} does not have the connection string of the storage account set properly. Set the environment variable: {storage_account.upper()}_STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
             )
             logging.info(
-                f"Configuration files are uploaded to general storage account (transition phase)"
+                f"Files are uploaded to general storage account (transition phase)"
             )
 
-        general_storage_connection_string = os.environ.get(
+        general_storage_account_connection_string = os.environ.get(
             "STORAGE_ACCOUNT_CONNECTION_STRING"
         )
-        if general_storage_connection_string is not None:
+        if general_storage_account_connection_string is not None:
             # Do not upload twice to same storage account (transition phase)
-            if tenant_storage_connection_string == general_storage_connection_string:
+            if storage_account_connection_string == general_storage_account_connection_string:
                 continue
 
-            # Update all configuration files in old storage container (transition phase)
+            # Update all files files in old storage container (transition phase)
             logging.info(
-                f"Updating configs for tenant: {tenant} (old storage account, transition phase)"
+                f"Updating files for storage account: {storage_account} (old storage account, transition phase)"
             )
             update_blobs(
-                compared_files=files_for_tenants[tenant],
-                changed_file_contents=changed_file_contents_for_tenant[tenant],
-                storage_connection_string=general_storage_connection_string,
+                compared_files=files_for_storage_accounts[storage_account],
+                changed_file_contents=changed_file_contents_for_storage_accounts[storage_account],
+                storage_connection_string=general_storage_account_connection_string,
             )
             logging.info(
-                f"Finished updating configs for tenant: {tenant} (old storage account, transition phase)"
+                f"Finished updating files for storage account: {storage_account} (old storage account, transition phase)"
             )
         else:
             logging.info(
                 f"General connection string of the storage account not set properly. Set the environment variable: STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
             )
 
-    logging.info(f"Finished updating all configurations for all tenants")
+    logging.info(f"Finished updating all files for all storage accounts")
 
 
 def update_blobs(compared_files, changed_file_contents, storage_connection_string):
@@ -142,8 +142,8 @@ def update_blobs(compared_files, changed_file_contents, storage_connection_strin
         conn_str=storage_connection_string
     )
 
-    for device, files in compared_files.items():
-        container_client = service.get_container_client(device)
+    for container, files in compared_files.items():
+        container_client = service.get_container_client(container)
         try:
             # Create the container if it does not exist
             container_client.create_container()
@@ -178,12 +178,12 @@ def update_blobs(compared_files, changed_file_contents, storage_connection_strin
 
 
 # Generate a blob container name from filename.
-# The name will be on the format '<tenant>-<device>'
+# The name will be on the format '<storageaccount>-<container>'
 def get_container_name(filename):
     return "-".join(filename.split("/")[0:2]).replace(" ", "-").lower()
 
 
-def get_tenant_name(filename):
+def get_storage_account_name(filename):
     return filename.split("/")[0]
 
 
@@ -192,15 +192,15 @@ def group_compared_files_and_changed_file_contents(
 ):
     all_filenames = list(map(lambda f: f.filename, compared_files))
     # Creates a nested dictionary with the following format:
-    # {"tenant": {"device": {"filename": File}}}
-    files_for_tenants = dict(
+    # {"storageaccount": {"container": {"filename": File}}}
+    files_for_storage_accounts = dict(
         map(
             lambda f: (
-                get_tenant_name(f),
+                get_storage_account_name(f),
                 dict(
                     map(
                         lambda f: (get_container_name(f), dict()),
-                        [x for x in all_filenames if x.startswith(get_tenant_name(f))],
+                        [x for x in all_filenames if x.startswith(get_storage_account_name(f))],
                     )
                 ),
             ),
@@ -210,21 +210,21 @@ def group_compared_files_and_changed_file_contents(
 
     for file in compared_files:
         try:
-            tenant, device, filename = file.filename.split("/")
-            device = "-".join([tenant, device]).replace(" ", "-").lower()
-            files_for_tenants[tenant][device][filename] = file
+            storage_account, container, filename = file.filename.split("/")
+            container = "-".join([storage_account, container]).replace(" ", "-").lower()
+            files_for_storage_accounts[storage_account][container][filename] = file
         except Exception:
             logging.error(f"Could not process file: {file.filename}")
 
-    changed_file_contents_for_tenant = dict(
-        map(lambda f: (get_tenant_name(f), dict()), changed_file_contents)
+    changed_file_contents_for_storage_account = dict(
+        map(lambda f: (get_storage_account_name(f), dict()), changed_file_contents)
     )
 
     for key, value in changed_file_contents.items():
-        tenant, device, filename = key.split("/")
-        changed_file_contents_for_tenant[tenant][key] = value
+        storage_account, container, filename = key.split("/")
+        changed_file_contents_for_storage_account[storage_account][key] = value
 
-    return files_for_tenants, changed_file_contents_for_tenant
+    return files_for_storage_accounts, changed_file_contents_for_storage_account
 
 
 if __name__ == "__main__":
