@@ -21,7 +21,7 @@ def main():
     logging.info(f"After commit sha: {after_commit_sha}")
     logging.info(f"Before commit sha: {before_commit_sha}")
 
-    logging.info(f"Connecting to github...")
+    logging.info("Connecting to github...")
     g = Github(repo_access_token)
     logging.info(f"Fetching repo {repo_name}...")
     repo = g.get_repo(repo_name)
@@ -35,9 +35,9 @@ def main():
 
 
 def process_files_changed(repo, branch_ref, previous_commit, this_commit):
-    logging.info(f"Repo fetched. Comparing commits...")
+    logging.info("Repo fetched. Comparing commits...")
     compared = repo.compare(previous_commit, this_commit)
-    logging.info(f"Commits compared.")
+    logging.info("Commits compared.")
     compared_files = list(
         filter(
             lambda f: len(f.filename.split("/")) >= 3
@@ -71,7 +71,7 @@ def process_files_changed(repo, branch_ref, previous_commit, this_commit):
 
     allowed_branches = ["refs/heads/master", "refs/heads/main"]
     if branch_ref not in allowed_branches:
-        logging.info(f"Change not on main branch, no files updated.")
+        logging.info("Change not on main branch, no files updated.")
         return
 
     logging.info(f"Change on branch: {branch_ref}, updating files")
@@ -97,16 +97,20 @@ def process_files_changed(repo, branch_ref, previous_commit, this_commit):
             logging.info(f"Updating files for storage account: {storage_account}")
             update_blobs(
                 compared_files=files_for_storage_accounts[storage_account],
-                changed_file_contents=changed_file_contents_for_storage_accounts[storage_account],
+                changed_file_contents=changed_file_contents_for_storage_accounts[
+                    storage_account
+                ],
                 storage_connection_string=storage_account_connection_string,
             )
-            logging.info(f"Finished updating files for storage account: {storage_account}")
+            logging.info(
+                f"Finished updating files for storage account: {storage_account}"
+            )
         else:
             logging.info(
                 f"Storage account: {storage_account} does not have the connection string of the storage account set properly. Set the environment variable: {storage_account.upper()}_STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
             )
             logging.info(
-                f"Files are uploaded to general storage account (transition phase)"
+                "Files are uploaded to general storage account (transition phase)"
             )
 
         general_storage_account_connection_string = os.environ.get(
@@ -114,7 +118,10 @@ def process_files_changed(repo, branch_ref, previous_commit, this_commit):
         )
         if general_storage_account_connection_string is not None:
             # Do not upload twice to same storage account (transition phase)
-            if storage_account_connection_string == general_storage_account_connection_string:
+            if (
+                storage_account_connection_string
+                == general_storage_account_connection_string
+            ):
                 continue
 
             # Update all files files in old storage container (transition phase)
@@ -123,7 +130,9 @@ def process_files_changed(repo, branch_ref, previous_commit, this_commit):
             )
             update_blobs(
                 compared_files=files_for_storage_accounts[storage_account],
-                changed_file_contents=changed_file_contents_for_storage_accounts[storage_account],
+                changed_file_contents=changed_file_contents_for_storage_accounts[
+                    storage_account
+                ],
                 storage_connection_string=general_storage_account_connection_string,
             )
             logging.info(
@@ -131,10 +140,10 @@ def process_files_changed(repo, branch_ref, previous_commit, this_commit):
             )
         else:
             logging.info(
-                f"General connection string of the storage account not set properly. Set the environment variable: STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
+                "General connection string of the storage account not set properly. Set the environment variable: STORAGE_ACCOUNT_CONNECTION_STRING in your workflow file"
             )
 
-    logging.info(f"Finished updating all files for all storage accounts")
+    logging.info("Finished updating all files for all storage accounts")
 
 
 def update_blobs(compared_files, changed_file_contents, storage_connection_string):
@@ -200,7 +209,11 @@ def group_compared_files_and_changed_file_contents(
                 dict(
                     map(
                         lambda f: (get_container_name(f), dict()),
-                        [x for x in all_filenames if x.startswith(get_storage_account_name(f))],
+                        [
+                            x
+                            for x in all_filenames
+                            if x.startswith(get_storage_account_name(f))
+                        ],
                     )
                 ),
             ),
