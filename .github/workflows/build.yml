@@ -38,12 +38,13 @@ jobs:
       with:
         prerelease-branches: ${{ env.PRERELEASE_BRANCHES }}
     
-    - name: Login to Docker Hub
+    - name: Login to GitHub Container Registry
       if: ${{ steps.context.outputs.should-publish == 'true' }}
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Docker Build
       if: ${{ steps.context.outputs.should-publish == 'false' }}
@@ -63,8 +64,8 @@ jobs:
       if: ${{ steps.context.outputs.should-publish == 'true' }}
       shell: bash
       run: |
-        docker build -f Dockerfile -t raalabs/azure-storage-upload-files:${{ steps.increment-version.outputs.next-version }} .
-        docker push raalabs/azure-storage-upload-files:${{ steps.increment-version.outputs.next-version }}
+        docker build -f Dockerfile -t ghcr.io/raalabs/azure-storage-upload-files:${{ steps.increment-version.outputs.next-version }} .
+        docker push ghcr.io/raalabs/azure-storage-upload-files:${{ steps.increment-version.outputs.next-version }}
         docker logout
 
     - name: Docker logout

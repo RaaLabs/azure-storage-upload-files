@@ -2,6 +2,10 @@
 [![Build](https://github.com/RaaLabs/azure-storage-upload-files/actions/workflows/build.yml/badge.svg)](https://github.com/RaaLabs/azure-storage-upload-files/actions/workflows/build.yml)
 
 GitHub action to upload files to multiple Azure storage accounts.
+
+> **Warning**
+> We are switching from Docker Hub to GitHub container registry to store the images for this action (Docker sunsets free plans for teams). **Use version 1.0.0** going forward as the previous versions will stop working once Docker removes the images from Docker hub (pull rate limits apply from 14.April 2023, removal on 14.May 2023)
+
 ## Workflow explanation
 The action will upload all files (the `.github` folder and other files at the root folder are excluded) in the repository which have changed between the most recent commit and the previous commit on the default branch. Files for different storage account folders are uploaded to different Azure storage accounts. It expects and only works with the following folder structure (folder names can be arbitrary, and file extensions do not matter). The folder structure here as been made to illustrate the link between the repo structure and the Azure storage account setup:
 
@@ -71,10 +75,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 2
 
     - name: Upload files
-      uses: RaaLabs/azure-storage-upload-files@v0.0.3
+      uses: RaaLabs/azure-storage-upload-files@v1.0.0
 ```
